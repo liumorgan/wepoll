@@ -21,8 +21,12 @@ stdout = exec('git.exe status --porcelain -uno', utf8);
 if (stdout.match(/\S/))
   throw new Error('git index or working directory not clean');
 
-exec('cmake.exe --build . --target dist', inherit);
-
+const env = { ...process.env,
+              WEPOLL_RELEASE_VERSION: version,
+              WEPOLL_RELEASE_DATE: (new Date()).toDateString() };
+exec('cmake.exe --build . --clean-first --target dist',
+     { env: env, ...inherit });
+return;
 stdout = exec('git rev-parse --verify HEAD', utf8);
 const sourceCommit = getSHA(stdout);
 
@@ -42,14 +46,14 @@ const distTree = getSHA(stdout);
 
 exec('git reset');
 
-stdout = exec(`git commit-tree ${distTree} ` + 
-              `-p ${previousTagCommit} ` + 
+stdout = exec(`git commit-tree ${distTree} ` +
+              `-p ${previousTagCommit} ` +
               `-p ${sourceCommit} ` +
               `-m "version ${version}"`, utf8);
 const distCommit = getSHA(stdout);
-          
-stdout = exec(`git commit-tree ${sourceTree} ` + 
-              `-p ${sourceCommit} ` + 
+
+stdout = exec(`git commit-tree ${sourceTree} ` +
+              `-p ${sourceCommit} ` +
               `-p ${distCommit} ` +
               `-m "dist: merge release tag ${distTag}"`, utf8);
 const mergeCommit = getSHA(stdout);
