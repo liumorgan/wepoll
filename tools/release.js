@@ -21,11 +21,11 @@ stdout = exec('git.exe status --porcelain -uno', utf8);
 if (stdout.match(/\S/))
   throw new Error('git index or working directory not clean');
 
-const env = { ...process.env,
-              WEPOLL_RELEASE_VERSION: version,
-              WEPOLL_RELEASE_DATE: (new Date()).toDateString() };
-exec('cmake.exe --build . --clean-first --target dist',
-     { env: env, ...inherit });
+exec(`cmake.exe . -DRELEASE_VERSION=${version}`);
+
+exec('cmake.exe --build . --clean-first --target dist', inherit);
+
+exec('cmake.exe . -URELEASE_VERSION');
 return;
 stdout = exec('git rev-parse --verify HEAD', utf8);
 const sourceCommit = getSHA(stdout);
